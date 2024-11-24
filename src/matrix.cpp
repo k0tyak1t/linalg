@@ -1,11 +1,12 @@
 #include "matrix.h"
+#include <cstring>
 
 matrix::matrix()
 {
 	size = 0;
 	matrix_elements = nullptr;
 	eig_calculated = false;
-	eival = nullptr;
+	eigval = nullptr;
 	eigvec = nullptr;
 }
 
@@ -13,12 +14,12 @@ matrix::matrix(int init_size)
 {
 	size = init_size;
 	matrix_elements = new double[size * size];
-	eig_calcualted = false;
+	eig_calculated = false;
 	eigval = nullptr;
 	eigvec = nullptr;
 }
 
-matrix::matrix(int init_size, const double* init_arr)
+matrix::matrix(int init_size, double* init_arr)
 {
 	size = init_size;
 	matrix_elements = new double[size * size];
@@ -77,6 +78,15 @@ matrix& matrix::operator=(const matrix& other)
 	return *this;
 }
 
+matrix& matrix::operator=(const double* arr)
+{
+  for (int i = 0; i < size * size; ++i) {
+    matrix_elements[i] = arr[i];
+  }
+
+  return *this;
+}
+
 matrix matrix::operator+(const matrix& other)
 {
 	matrix result(size);
@@ -94,7 +104,7 @@ matrix matrix::operator+(const double num)
 	return *this;
 }
 
-matrix& operator(const matrix& other)
+matrix& matrix::operator+=(const matrix& other)
 {
 	for (int i = 0; i < size * size; ++i) {
 		matrix_elements[i] += other.matrix_elements[i];
@@ -102,7 +112,7 @@ matrix& operator(const matrix& other)
 	return *this;
 }
 
-matrix& operator(const double num)
+matrix& matrix::operator+=(const double num)
 {
 	for (int i = 0; i < size; ++i) {
 		(*this)[i][i] += num;
@@ -130,7 +140,7 @@ matrix matrix::operator-(const matrix& other)
 	return result;
 }
 
-matrix matrix::operator-(const doulbe num)
+matrix matrix::operator-(const double num)
 {
 	matrix result(size);
 
@@ -148,7 +158,7 @@ matrix& matrix::operator-=(const matrix& other)
 	return *this;
 }
 
-matrix& operator-=(const double num)
+matrix& matrix::operator-=(const double num)
 {
 	for (int i = 0; i < size; ++i) {
 		(*this)[i][i] -= num;
@@ -188,7 +198,7 @@ matrix& matrix::operator*=(const matrix& other)
 	return *this;
 }
 
-matrix& matrix::opeartor*=(const double num)
+matrix& matrix::operator*=(const double num)
 {
 	for (int i = 0; i < size * size; ++i) {
 		matrix_elements[i] *= num;
@@ -222,5 +232,53 @@ matrix matrix::T()
 		}
 	}
 	return result;
+}
+
+matrix matrix::minor(int i, int j)
+{
+	matrix result(size - 1);
+	int linear_idx = 0;
+	for (int k = 0; k < size; ++k) {
+		for (int l = 0; l < size; ++l) {
+			if (k != i && l != j) {
+				result.matrix_elements[linear_idx] = (*this)[k][l];
+				linear_idx += 1;
+			}
+		}
+	}
+	return result;
+}
+
+double matrix::det()
+{
+	if (size == 0) {return 0; }
+	if (size == 1) {return matrix_elements[0]; }
+
+	if (size == 2) {
+		return (*this)[0][0] * (*this)[1][1] -
+			   (*this)[0][1] * (*this)[1][0];
+	}
+
+	double res = 0;
+
+	for (int i = 0; i < size; ++i) {
+		if (i%2==0) {
+			res += (*this)[0][i] * (*this).minor(0, i).det();}
+		else {
+			res -= (*this)[0][i] * (*this).minor(0, i).det();
+			}
+	}
+
+	return res;
+}
+
+void matrix::print()
+{
+	for (int i = 0; i < size; ++i) {
+		for (int j = 0; j < size; ++j) {
+			std::cout << (*this)[i][j] << ' ';
+		}
+		std::cout << '\n';
+	}
 }
 
